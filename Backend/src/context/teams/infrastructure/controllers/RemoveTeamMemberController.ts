@@ -1,13 +1,14 @@
 import { Request, Response } from 'express';
-import { GetTeam } from '../../application/use-cases/GetTeam';
+import { RemoveTeamMember } from '../../application/use-cases/RemoveTeamMember';
 import { TeamNotFoundError } from '../../domain/exceptions/TeamNotFoundError';
 
-export class GetTeamController {
-  constructor(private readonly getTeam: GetTeam) {}
+export class RemoveTeamMemberController {
+  constructor(private readonly removeTeamMember: RemoveTeamMember) {}
 
   handle = async (req: Request, res: Response): Promise<void> => {
     try {
-      const team = await this.getTeam.execute(req.params.teamId);
+      const { teamId, userId } = req.params;
+      const team = await this.removeTeamMember.execute(teamId, userId);
       res.status(200).json(team);
     } catch (error) {
       if (error instanceof TeamNotFoundError) {

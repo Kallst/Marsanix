@@ -1,1 +1,5 @@
 node_modules
+.vscode
+.lsp/
+.clj-kondo
+.env
