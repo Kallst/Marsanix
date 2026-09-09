@@ -20,4 +20,12 @@ CREATE TABLE team_members (
   PRIMARY KEY (team_id, user_id)
 );
 
-SELECT * FROM users;
+
+AÑADIR IMPORTANTE ________-----_____
+
+
+CREATE TABLE game_templates (
+  id UUID PRIMARY KEY,
+  name VARCHAR(50) NOT NULL UNIQUE,
+  team_size INTEGER NOT NULL CHECK (team_size > 0)
+);
