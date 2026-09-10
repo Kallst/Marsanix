@@ -1,7 +1,8 @@
 import express, { Application } from 'express';
 import cors from 'cors';
 import { pool } from './db';
-
+import swaggerUi from 'swagger-ui-express';
+import { openapiDocument } from './openapi';
 import { PostgresTeamRepository } from './context/teams/infrastructure/repositories/PostgresTeamRepository';
 import { CreateTeam } from './context/teams/application/use-cases/CreateTeam';
 import { AddTeamMember } from './context/teams/application/use-cases/AddTeamMember';
@@ -27,7 +28,7 @@ export function createApp(): Application {
 
   app.use(cors());
   app.use(express.json());
-
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiDocument));
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok', service: 'marsanix-esports-backend' });
   });
