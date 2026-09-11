@@ -1,8 +1,9 @@
 import express, { Application } from 'express';
 import cors from 'cors';
-import { pool } from './db';
 import swaggerUi from 'swagger-ui-express';
+import { pool } from './db';
 import { openapiDocument } from './openapi';
+
 import { PostgresTeamRepository } from './context/teams/infrastructure/repositories/PostgresTeamRepository';
 import { CreateTeam } from './context/teams/application/use-cases/CreateTeam';
 import { AddTeamMember } from './context/teams/application/use-cases/AddTeamMember';
@@ -14,6 +15,7 @@ import { AddTeamMemberController } from './context/teams/infrastructure/controll
 import { RemoveTeamMemberController } from './context/teams/infrastructure/controllers/RemoveTeamMemberController';
 import { GetTeamController } from './context/teams/infrastructure/controllers/GetTeamController';
 import { ListTeamsByUserController } from './context/teams/infrastructure/controllers/ListTeamsByUserController';
+import { createTeamsRouter } from './context/teams/infrastructure/teams.routes';
 
 import { PostgresGameTemplateRepository } from './context/games/infrastructure/repositories/PostgresGameTemplateRepository';
 import { CreateGameTemplate } from './context/games/application/use-cases/CreateGameTemplate';
@@ -22,6 +24,7 @@ import { ListGameTemplates } from './context/games/application/use-cases/ListGam
 import { CreateGameTemplateController } from './context/games/infrastructure/controllers/CreateGameTemplateController';
 import { GetGameTemplateController } from './context/games/infrastructure/controllers/GetGameTemplateController';
 import { ListGameTemplatesController } from './context/games/infrastructure/controllers/ListGameTemplatesController';
+import { createGamesRouter } from './context/games/infrastructure/games.routes';
 
 export function createApp(): Application {
   const app = express();
@@ -29,6 +32,7 @@ export function createApp(): Application {
   app.use(cors());
   app.use(express.json());
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiDocument));
+
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok', service: 'marsanix-esports-backend' });
   });
@@ -36,38 +40,26 @@ export function createApp(): Application {
   // --- Composition root: módulo teams ---
   const teamRepository = new PostgresTeamRepository(pool);
 
-  const createTeam = new CreateTeam(teamRepository);
-  const addTeamMember = new AddTeamMember(teamRepository);
-  const removeTeamMember = new RemoveTeamMember(teamRepository);
-  const getTeam = new GetTeam(teamRepository);
-  const listTeamsByUser = new ListTeamsByUser(teamRepository);
+  const teamsRouter = createTeamsRouter({
+    createTeamController: new CreateTeamController(new CreateTeam(teamRepository)),
+    getTeamController: new GetTeamController(new GetTeam(teamRepository)),
+    addTeamMemberController: new AddTeamMemberController(new AddTeamMember(teamRepository)),
+    removeTeamMemberController: new RemoveTeamMemberController(new RemoveTeamMember(teamRepository)),
+    listTeamsByUserController: new ListTeamsByUserController(new ListTeamsByUser(teamRepository)),
+  });
 
-  const createTeamController = new CreateTeamController(createTeam);
-  const addTeamMemberController = new AddTeamMemberController(addTeamMember);
-  const removeTeamMemberController = new RemoveTeamMemberController(removeTeamMember);
-  const getTeamController = new GetTeamController(getTeam);
-  const listTeamsByUserController = new ListTeamsByUserController(listTeamsByUser);
-
-  app.post('/api/teams', createTeamController.handle);
-  app.get('/api/teams/:teamId', getTeamController.handle);
-  app.post('/api/teams/:teamId/members', addTeamMemberController.handle);
-  app.delete('/api/teams/:teamId/members/:userId', removeTeamMemberController.handle);
-  app.get('/api/users/:userId/teams', listTeamsByUserController.handle);
+  app.use('/api', teamsRouter);
 
   // --- Composition root: módulo games ---
   const gameTemplateRepository = new PostgresGameTemplateRepository(pool);
 
-  const createGameTemplate = new CreateGameTemplate(gameTemplateRepository);
-  const getGameTemplate = new GetGameTemplate(gameTemplateRepository);
-  const listGameTemplates = new ListGameTemplates(gameTemplateRepository);
+  const gamesRouter = createGamesRouter({
+    createGameTemplateController: new CreateGameTemplateController(new CreateGameTemplate(gameTemplateRepository)),
+    getGameTemplateController: new GetGameTemplateController(new GetGameTemplate(gameTemplateRepository)),
+    listGameTemplatesController: new ListGameTemplatesController(new ListGameTemplates(gameTemplateRepository)),
+  });
 
-  const createGameTemplateController = new CreateGameTemplateController(createGameTemplate);
-  const getGameTemplateController = new GetGameTemplateController(getGameTemplate);
-  const listGameTemplatesController = new ListGameTemplatesController(listGameTemplates);
-
-  app.post('/api/games', createGameTemplateController.handle);
-  app.get('/api/games/:id', getGameTemplateController.handle);
-  app.get('/api/games', listGameTemplatesController.handle);
+  app.use('/api', gamesRouter);
 
   return app;
 }
