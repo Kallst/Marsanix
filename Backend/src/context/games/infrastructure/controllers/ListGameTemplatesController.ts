@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ListGameTemplates } from '../../application/use-cases/ListGameTemplates';
+import { ListGameTemplates } from '../../application/use-cases/GameUseCases';
 
 export class ListGameTemplatesController {
   constructor(private readonly listGameTemplates: ListGameTemplates) {}
