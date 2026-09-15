@@ -5,11 +5,7 @@ import { pool } from './db';
 import { openapiDocument } from './openapi';
 
 import { PostgresTeamRepository } from './context/teams/infrastructure/repositories/PostgresTeamRepository';
-import { CreateTeam } from './context/teams/application/use-cases/CreateTeam';
-import { AddTeamMember } from './context/teams/application/use-cases/AddTeamMember';
-import { RemoveTeamMember } from './context/teams/application/use-cases/RemoveTeamMember';
-import { GetTeam } from './context/teams/application/use-cases/GetTeam';
-import { ListTeamsByUser } from './context/teams/application/use-cases/ListTeamsByUser';
+import { CreateTeam, AddTeamMember, RemoveTeamMember, GetTeam, ListTeamsByUser } from './context/teams/application/use-cases/TeamUseCases';
 import { CreateTeamController } from './context/teams/infrastructure/controllers/CreateTeamController';
 import { AddTeamMemberController } from './context/teams/infrastructure/controllers/AddTeamMemberController';
 import { RemoveTeamMemberController } from './context/teams/infrastructure/controllers/RemoveTeamMemberController';
@@ -18,9 +14,7 @@ import { ListTeamsByUserController } from './context/teams/infrastructure/contro
 import { createTeamsRouter } from './context/teams/infrastructure/teams.routes';
 
 import { PostgresGameTemplateRepository } from './context/games/infrastructure/repositories/PostgresGameTemplateRepository';
-import { CreateGameTemplate } from './context/games/application/use-cases/CreateGameTemplate';
-import { GetGameTemplate } from './context/games/application/use-cases/GetGameTemplate';
-import { ListGameTemplates } from './context/games/application/use-cases/ListGameTemplates';
+import { CreateGameTemplate, GetGameTemplate, ListGameTemplates } from './context/games/application/use-cases/GameUseCases';
 import { CreateGameTemplateController } from './context/games/infrastructure/controllers/CreateGameTemplateController';
 import { GetGameTemplateController } from './context/games/infrastructure/controllers/GetGameTemplateController';
 import { ListGameTemplatesController } from './context/games/infrastructure/controllers/ListGameTemplatesController';

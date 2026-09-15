@@ -1,13 +1,20 @@
 import { Request, Response } from 'express';
-import { GetTeam } from '../../application/use-cases/GetTeam';
+import { GetTeam } from '../../application/use-cases/TeamUseCases';
 import { TeamNotFoundError } from '../../domain/exceptions/TeamNotFoundError';
 
 export class GetTeamController {
   constructor(private readonly getTeam: GetTeam) {}
 
   handle = async (req: Request, res: Response): Promise<void> => {
+    const teamId = req.params.teamId;
+
+    if (typeof teamId !== 'string') {
+      res.status(400).json({ message: 'teamId es requerido' });
+      return;
+    }
+
     try {
-      const team = await this.getTeam.execute(req.params.teamId);
+      const team = await this.getTeam.execute(teamId);
       res.status(200).json(team);
     } catch (error) {
       if (error instanceof TeamNotFoundError) {

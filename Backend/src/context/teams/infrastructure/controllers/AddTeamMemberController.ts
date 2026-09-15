@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { AddTeamMember } from '../../application/use-cases/AddTeamMember';
+import { AddTeamMember } from '../../application/use-cases/TeamUseCases';
 import { TeamNotFoundError } from '../../domain/exceptions/TeamNotFoundError';
 import { PlayerAlreadyInTeamError } from '../../domain/exceptions/PlayerAlreadyInTeamError';
 import { TeamMemberLimitExceededError } from '../../domain/exceptions/TeamMemberLimitExceededError';
@@ -8,9 +8,15 @@ export class AddTeamMemberController {
   constructor(private readonly addTeamMember: AddTeamMember) {}
 
   handle = async (req: Request, res: Response): Promise<void> => {
+    const teamId = req.params.teamId;
+    const { userId } = req.body;
+
+    if (typeof teamId !== 'string' || typeof userId !== 'string') {
+      res.status(400).json({ message: 'teamId y userId son requeridos' });
+      return;
+    }
+
     try {
-      const { teamId } = req.params;
-      const { userId } = req.body;
       const team = await this.addTeamMember.execute(teamId, userId);
       res.status(200).json(team);
     } catch (error) {

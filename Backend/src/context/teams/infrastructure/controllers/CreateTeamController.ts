@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { CreateTeam } from '../../application/use-cases/CreateTeam';
+import { CreateTeam } from '../../application/use-cases/TeamUseCases';
 import { PlayerAlreadyInTeamError } from '../../domain/exceptions/PlayerAlreadyInTeamError';
 
 export class CreateTeamController {
