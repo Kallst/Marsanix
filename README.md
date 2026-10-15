@@ -29,3 +29,8 @@ CREATE TABLE game_templates (
   name VARCHAR(50) NOT NULL UNIQUE,
   team_size INTEGER NOT NULL CHECK (team_size > 0)
 );
+
+AGREGAR/ INSTALAR (dentro de backend):
+
+npm install bcrypt jsonwebtoken
+npm install -D @types/bcrypt @types/jsonwebtoken
