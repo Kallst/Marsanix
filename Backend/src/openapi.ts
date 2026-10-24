@@ -122,6 +122,74 @@ export const openapiDocument = {
       },
     },
 
+
+    '/api/users/register': {
+      post: {
+        summary: 'Registrar un usuario',
+        tags: ['Users'],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['name', 'email', 'password'],
+                properties: {
+                  name: { type: 'string', example: 'Lola' },
+                  email: { type: 'string', format: 'email', example: 'lola@test.com' },
+                  password: { type: 'string', minLength: 8, example: '12345678' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: 'Usuario registrado', content: { 'application/json': { schema: { $ref: '#/components/schemas/User' } } } },
+          400: { description: 'Datos inválidos (nombre, correo o contraseña)' },
+          409: { description: 'Ya existe un usuario con ese correo' },
+        },
+      },
+    },
+
+    '/api/users/login': {
+      post: {
+        summary: 'Iniciar sesión',
+        tags: ['Users'],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['email', 'password'],
+                properties: {
+                  email: { type: 'string', format: 'email', example: 'lola@test.com' },
+                  password: { type: 'string', example: '12345678' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Sesión iniciada', content: { 'application/json': { schema: { $ref: '#/components/schemas/LoginResult' } } } },
+          400: { description: 'Datos inválidos' },
+          401: { description: 'Credenciales inválidas' },
+        },
+      },
+    },
+
+    '/api/users/{userId}': {
+      get: {
+        summary: 'Consultar el perfil de un usuario por id',
+        tags: ['Users'],
+        parameters: [{ name: 'userId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: {
+          200: { description: 'Usuario encontrado', content: { 'application/json': { schema: { $ref: '#/components/schemas/User' } } } },
+          404: { description: 'Usuario no encontrado' },
+        },
+      },
+    },
+
     '/api/games': {
       post: {
         summary: 'Crear una plantilla de videojuego',
@@ -181,6 +249,23 @@ export const openapiDocument = {
           memberIds: { type: 'array', items: { type: 'string', format: 'uuid' } },
         },
       },
+
+      User: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          name: { type: 'string' },
+          email: { type: 'string', format: 'email' },
+        },
+      },
+      LoginResult: {
+        type: 'object',
+        properties: {
+          token: { type: 'string' },
+          user: { $ref: '#/components/schemas/User' },
+        },
+      },
+
       GameTemplate: {
         type: 'object',
         properties: {
