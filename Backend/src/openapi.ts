@@ -108,20 +108,6 @@ export const openapiDocument = {
       },
     },
 
-    '/api/users/{userId}/teams': {
-      get: {
-        summary: 'Listar los equipos de un usuario',
-        tags: ['Teams'],
-        parameters: [{ name: 'userId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
-        responses: {
-          200: {
-            description: 'Lista de equipos',
-            content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/Team' } } } },
-          },
-        },
-      },
-    },
-
 
     '/api/users/register': {
       post: {
@@ -186,6 +172,21 @@ export const openapiDocument = {
         responses: {
           200: { description: 'Usuario encontrado', content: { 'application/json': { schema: { $ref: '#/components/schemas/User' } } } },
           404: { description: 'Usuario no encontrado' },
+        },
+      },
+    },
+
+
+    '/api/users/{userId}/teams': {
+      get: {
+        summary: 'Listar los equipos de un usuario',
+        tags: ['Users'],
+        parameters: [{ name: 'userId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: {
+          200: {
+            description: 'Lista de equipos',
+            content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/Team' } } } },
+          },
         },
       },
     },
