@@ -20,6 +20,11 @@ import { GetGameTemplateController } from './context/games/infrastructure/contro
 import { ListGameTemplatesController } from './context/games/infrastructure/controllers/ListGameTemplatesController';
 import { createGamesRouter } from './context/games/infrastructure/games.routes';
 
+import { PostgresUserRepository } from './context/users/infrastructure/repositories/PostgresUserRepository';
+import { GetUserProfile } from './context/users/application/use-cases/GetUserProfile';
+import { GetUserProfileController } from './context/users/infrastructure/controllers/GetUserProfileController';
+import { createUsersRouter } from './context/users/infrastructure/users.routes';
+
 export function createApp(): Application {
   const app = express();
 
@@ -54,6 +59,17 @@ export function createApp(): Application {
   });
 
   app.use('/api', gamesRouter);
+
+  // --- Composition root: módulo users ---
+  const userRepository = new PostgresUserRepository(pool);
+
+  const usersRouter = createUsersRouter({
+    getUserProfileController: new GetUserProfileController(new GetUserProfile(userRepository)),
+  });
+
+  app.use('/api', usersRouter);
+
+
 
   return app;
 }
