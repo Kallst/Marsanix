@@ -34,3 +34,15 @@ AGREGAR/ INSTALAR (dentro de backend):
 
 npm install bcrypt jsonwebtoken
 npm install -D @types/bcrypt @types/jsonwebtoken
+
+REALIZAR CAMBIOS EN LA BASE DE DATOS:
+
+ALTER TABLE teams ADD COLUMN captain_id UUID REFERENCES users(id);
+
+UPDATE teams t
+SET captain_id = (SELECT tm.user_id FROM team_members tm WHERE tm.team_id = t.id LIMIT 1)
+WHERE captain_id IS NULL;
+
+DELETE FROM teams WHERE captain_id IS NULL;
+
+ALTER TABLE teams ALTER COLUMN captain_id SET NOT NULL;
