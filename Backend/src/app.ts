@@ -15,10 +15,11 @@ import { TransferTeamCaptainController } from './context/teams/infrastructure/co
 import { createTeamsRouter } from './context/teams/infrastructure/teams.routes';
 
 import { PostgresGameTemplateRepository } from './context/games/infrastructure/repositories/PostgresGameTemplateRepository';
-import { CreateGameTemplate, GetGameTemplate, ListGameTemplates } from './context/games/application/use-cases/GameUseCases';
+import { CreateGameTemplate, GetGameTemplate, ListGameTemplates, UpdateGameTemplate } from './context/games/application/use-cases/GameUseCases';
 import { CreateGameTemplateController } from './context/games/infrastructure/controllers/CreateGameTemplateController';
 import { GetGameTemplateController } from './context/games/infrastructure/controllers/GetGameTemplateController';
 import { ListGameTemplatesController } from './context/games/infrastructure/controllers/ListGameTemplatesController';
+import { UpdateGameTemplateController } from './context/games/infrastructure/controllers/UpdateGameTemplateController';
 import { createGamesRouter } from './context/games/infrastructure/games.routes';
 
 import { PostgresUserRepository } from './context/users/infrastructure/repositories/PostgresUserRepository';
@@ -76,7 +77,8 @@ export function createApp(): Application {
     createGameTemplateController: new CreateGameTemplateController(new CreateGameTemplate(gameTemplateRepository)),
     getGameTemplateController: new GetGameTemplateController(new GetGameTemplate(gameTemplateRepository)),
     listGameTemplatesController: new ListGameTemplatesController(new ListGameTemplates(gameTemplateRepository)),
-  });
+    updateGameTemplateController: new UpdateGameTemplateController(new UpdateGameTemplate(gameTemplateRepository)),
+  }, authenticate);
 
   app.use('/api', gamesRouter);
 
