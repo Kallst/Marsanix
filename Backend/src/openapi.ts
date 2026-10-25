@@ -177,8 +177,34 @@ export const openapiDocument = {
           404: { description: 'Usuario no encontrado' },
         },
       },
+      put: {
+        summary: 'Editar el nombre del perfil del usuario autenticado',
+        tags: ['Users'],
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'userId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['name'],
+                properties: {
+                  name: { type: 'string', minLength: 2, maxLength: 100, example: 'Lola Alzate' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Perfil actualizado', content: { 'application/json': { schema: { $ref: '#/components/schemas/User' } } } },
+          400: { description: 'Nombre inválido' },
+          401: { description: 'Token ausente, inválido o vencido' },
+          403: { description: 'Solo puedes editar tu propio perfil' },
+          404: { description: 'Usuario no encontrado' },
+        },
+      },
     },
-
 
     '/api/users/{userId}/teams': {
       get: {

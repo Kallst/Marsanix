@@ -26,9 +26,11 @@ import { JwtTokenService } from './context/users/infrastructure/services/TokenSe
 import { RegisterUser } from './context/users/application/use-cases/RegisterUser';
 import { LoginUser } from './context/users/application/use-cases/LoginUser';
 import { GetUserProfile } from './context/users/application/use-cases/GetUserProfile';
+import { UpdateUserProfile } from './context/users/application/use-cases/UpdateUserProfile';
 import { RegisterUserController } from './context/users/infrastructure/controllers/RegisterUserController';
 import { LoginController } from './context/users/infrastructure/controllers/LoginController';
 import { GetUserProfileController } from './context/users/infrastructure/controllers/GetUserProfileController';
+import { UpdateUserProfileController } from './context/users/infrastructure/controllers/UpdateUserProfileController';
 import { createUsersRouter } from './context/users/infrastructure/users.routes';
 import { createAuthenticate } from './context/users/infrastructure/middlewares/authMiddleware';
 
@@ -82,8 +84,9 @@ export function createApp(): Application {
     registerUserController: new RegisterUserController(new RegisterUser(userRepository, passwordHasher)),
     loginController: new LoginController(new LoginUser(userRepository, passwordHasher, tokenService)),
     getUserProfileController: new GetUserProfileController(new GetUserProfile(userRepository)),
+    updateUserProfileController: new UpdateUserProfileController(new UpdateUserProfile(userRepository)),
   }, authenticate);
-
+  
   app.use('/api', usersRouter);
 
 
