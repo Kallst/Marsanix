@@ -3,3 +3,5 @@ node_modules
 .lsp/
 .clj-kondo
 .env
+Backend/dist
+Marsanix Local.session.sql
