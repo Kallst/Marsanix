@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { CreateGameTemplate } from '../../application/use-cases/CreateGameTemplate';
+import { CreateGameTemplate } from '../../application/use-cases/GameUseCases';
 import { GameTemplateAlreadyExistsError } from '../../domain/exceptions/GameTemplateAlreadyExistsError';
 
 export class CreateGameTemplateController {
