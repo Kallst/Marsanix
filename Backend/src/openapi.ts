@@ -32,18 +32,18 @@ export const openapiDocument = {
 
     '/api/teams': {
       post: {
-        summary: 'Crear un equipo',
+        summary: 'Crear un equipo (quien lo crea queda como capitán)',
         tags: ['Teams'],
+        security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
           content: {
             'application/json': {
               schema: {
                 type: 'object',
-                required: ['name', 'creatorUserId'],
+                required: ['name'],
                 properties: {
                   name: { type: 'string', example: 'Los Halcones' },
-                  creatorUserId: { type: 'string', format: 'uuid' },
                 },
               },
             },
@@ -51,6 +51,8 @@ export const openapiDocument = {
         },
         responses: {
           201: { description: 'Equipo creado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Team' } } } },
+          400: { description: 'Nombre del equipo inválido' },
+          401: { description: 'Token ausente, inválido o vencido' },
           409: { description: 'El jugador ya pertenece a un equipo' },
         },
       },
@@ -70,8 +72,9 @@ export const openapiDocument = {
 
     '/api/teams/{teamId}/members': {
       post: {
-        summary: 'Agregar un integrante al equipo',
+        summary: 'Agregar un integrante al equipo (solo el capitán)',
         tags: ['Teams'],
+        security: [{ bearerAuth: [] }],
         parameters: [{ name: 'teamId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
         requestBody: {
           required: true,
@@ -87,6 +90,8 @@ export const openapiDocument = {
         },
         responses: {
           200: { description: 'Integrante agregado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Team' } } } },
+          401: { description: 'Token ausente, inválido o vencido' },
+          403: { description: 'Solo el capitán del equipo puede agregar integrantes' },
           404: { description: 'Equipo no encontrado' },
           409: { description: 'Jugador ya en un equipo, o límite de integrantes alcanzado' },
         },
@@ -95,19 +100,50 @@ export const openapiDocument = {
 
     '/api/teams/{teamId}/members/{userId}': {
       delete: {
-        summary: 'Quitar un integrante del equipo',
+        summary: 'Quitar un integrante del equipo (solo el capitán)',
         tags: ['Teams'],
+        security: [{ bearerAuth: [] }],
         parameters: [
           { name: 'teamId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
           { name: 'userId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
         ],
         responses: {
           200: { description: 'Integrante removido', content: { 'application/json': { schema: { $ref: '#/components/schemas/Team' } } } },
+          401: { description: 'Token ausente, inválido o vencido' },
+          403: { description: 'Solo el capitán del equipo puede quitar integrantes' },
           404: { description: 'Equipo no encontrado' },
+          409: { description: 'El capitán no puede ser quitado; primero debe transferir la capitanía' },
         },
       },
     },
 
+    '/api/teams/{teamId}/captain': {
+      put: {
+        summary: 'Transferir la capitanía a otro integrante (solo el capitán actual)',
+        tags: ['Teams'],
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'teamId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['userId'],
+                properties: { userId: { type: 'string', format: 'uuid', description: 'Nuevo capitán (debe ser integrante del equipo)' } },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Capitanía transferida', content: { 'application/json': { schema: { $ref: '#/components/schemas/Team' } } } },
+          401: { description: 'Token ausente, inválido o vencido' },
+          403: { description: 'Solo el capitán del equipo puede transferir la capitanía' },
+          404: { description: 'Equipo no encontrado' },
+          409: { description: 'El nuevo capitán no es integrante del equipo' },
+        },
+      },
+    },
 
     '/api/users/register': {
       post: {
@@ -279,6 +315,7 @@ export const openapiDocument = {
         properties: {
           id: { type: 'string', format: 'uuid' },
           name: { type: 'string' },
+          captainId: { type: 'string', format: 'uuid' },
           memberIds: { type: 'array', items: { type: 'string', format: 'uuid' } },
         },
       },
