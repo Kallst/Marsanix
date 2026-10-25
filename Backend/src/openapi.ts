@@ -108,10 +108,108 @@ export const openapiDocument = {
       },
     },
 
+
+    '/api/users/register': {
+      post: {
+        summary: 'Registrar un usuario',
+        tags: ['Users'],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['name', 'email', 'password'],
+                properties: {
+                  name: { type: 'string', example: 'Lola' },
+                  email: { type: 'string', format: 'email', example: 'lola@test.com' },
+                  password: { type: 'string', minLength: 8, example: '12345678' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: 'Usuario registrado', content: { 'application/json': { schema: { $ref: '#/components/schemas/User' } } } },
+          400: { description: 'Datos inválidos (nombre, correo o contraseña)' },
+          409: { description: 'Ya existe un usuario con ese correo' },
+        },
+      },
+    },
+
+    '/api/users/login': {
+      post: {
+        summary: 'Iniciar sesión',
+        tags: ['Users'],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['email', 'password'],
+                properties: {
+                  email: { type: 'string', format: 'email', example: 'lola@test.com' },
+                  password: { type: 'string', example: '12345678' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Sesión iniciada', content: { 'application/json': { schema: { $ref: '#/components/schemas/LoginResult' } } } },
+          400: { description: 'Datos inválidos' },
+          401: { description: 'Credenciales inválidas' },
+        },
+      },
+    },
+
+    '/api/users/{userId}': {
+      get: {
+        summary: 'Consultar el perfil de un usuario por id',
+        tags: ['Users'],
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'userId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: {
+          200: { description: 'Usuario encontrado', content: { 'application/json': { schema: { $ref: '#/components/schemas/User' } } } },
+          401: { description: 'Token ausente, inválido o vencido' },
+          403: { description: 'Solo puedes consultar tu propio perfil' },
+          404: { description: 'Usuario no encontrado' },
+        },
+      },
+      put: {
+        summary: 'Editar el nombre del perfil del usuario autenticado',
+        tags: ['Users'],
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'userId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['name'],
+                properties: {
+                  name: { type: 'string', minLength: 2, maxLength: 100, example: 'Lola Alzate' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Perfil actualizado', content: { 'application/json': { schema: { $ref: '#/components/schemas/User' } } } },
+          400: { description: 'Nombre inválido' },
+          401: { description: 'Token ausente, inválido o vencido' },
+          403: { description: 'Solo puedes editar tu propio perfil' },
+          404: { description: 'Usuario no encontrado' },
+        },
+      },
+    },
+
     '/api/users/{userId}/teams': {
       get: {
         summary: 'Listar los equipos de un usuario',
-        tags: ['Teams'],
+        tags: ['Users'],
         parameters: [{ name: 'userId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
         responses: {
           200: {
@@ -172,6 +270,9 @@ export const openapiDocument = {
   },
 
   components: {
+    securitySchemes: {
+      bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+    },
     schemas: {
       Team: {
         type: 'object',
@@ -181,6 +282,23 @@ export const openapiDocument = {
           memberIds: { type: 'array', items: { type: 'string', format: 'uuid' } },
         },
       },
+
+      User: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          name: { type: 'string' },
+          email: { type: 'string', format: 'email' },
+        },
+      },
+      LoginResult: {
+        type: 'object',
+        properties: {
+          token: { type: 'string' },
+          user: { $ref: '#/components/schemas/User' },
+        },
+      },
+
       GameTemplate: {
         type: 'object',
         properties: {

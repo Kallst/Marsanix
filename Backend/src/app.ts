@@ -21,9 +21,18 @@ import { ListGameTemplatesController } from './context/games/infrastructure/cont
 import { createGamesRouter } from './context/games/infrastructure/games.routes';
 
 import { PostgresUserRepository } from './context/users/infrastructure/repositories/PostgresUserRepository';
+import { BcryptPasswordHasher } from './context/users/infrastructure/services/PasswordHasher';
+import { JwtTokenService } from './context/users/infrastructure/services/TokenService';
+import { RegisterUser } from './context/users/application/use-cases/RegisterUser';
+import { LoginUser } from './context/users/application/use-cases/LoginUser';
 import { GetUserProfile } from './context/users/application/use-cases/GetUserProfile';
+import { UpdateUserProfile } from './context/users/application/use-cases/UpdateUserProfile';
+import { RegisterUserController } from './context/users/infrastructure/controllers/RegisterUserController';
+import { LoginController } from './context/users/infrastructure/controllers/LoginController';
 import { GetUserProfileController } from './context/users/infrastructure/controllers/GetUserProfileController';
+import { UpdateUserProfileController } from './context/users/infrastructure/controllers/UpdateUserProfileController';
 import { createUsersRouter } from './context/users/infrastructure/users.routes';
+import { createAuthenticate } from './context/users/infrastructure/middlewares/authMiddleware';
 
 export function createApp(): Application {
   const app = express();
@@ -61,12 +70,23 @@ export function createApp(): Application {
   app.use('/api', gamesRouter);
 
   // --- Composition root: módulo users ---
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) {
+    throw new Error('JWT_SECRET no está definido en las variables de entorno');
+  }
+
   const userRepository = new PostgresUserRepository(pool);
+  const passwordHasher = new BcryptPasswordHasher();
+  const tokenService = new JwtTokenService(jwtSecret);
+  const authenticate = createAuthenticate(tokenService);
 
   const usersRouter = createUsersRouter({
+    registerUserController: new RegisterUserController(new RegisterUser(userRepository, passwordHasher)),
+    loginController: new LoginController(new LoginUser(userRepository, passwordHasher, tokenService)),
     getUserProfileController: new GetUserProfileController(new GetUserProfile(userRepository)),
-  });
-
+    updateUserProfileController: new UpdateUserProfileController(new UpdateUserProfile(userRepository)),
+  }, authenticate);
+  
   app.use('/api', usersRouter);
 
 
