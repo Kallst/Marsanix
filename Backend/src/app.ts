@@ -30,6 +30,7 @@ import { RegisterUserController } from './context/users/infrastructure/controlle
 import { LoginController } from './context/users/infrastructure/controllers/LoginController';
 import { GetUserProfileController } from './context/users/infrastructure/controllers/GetUserProfileController';
 import { createUsersRouter } from './context/users/infrastructure/users.routes';
+import { createAuthenticate } from './context/users/infrastructure/middlewares/authMiddleware';
 
 export function createApp(): Application {
   const app = express();
@@ -75,12 +76,13 @@ export function createApp(): Application {
   const userRepository = new PostgresUserRepository(pool);
   const passwordHasher = new BcryptPasswordHasher();
   const tokenService = new JwtTokenService(jwtSecret);
+  const authenticate = createAuthenticate(tokenService);
 
   const usersRouter = createUsersRouter({
     registerUserController: new RegisterUserController(new RegisterUser(userRepository, passwordHasher)),
     loginController: new LoginController(new LoginUser(userRepository, passwordHasher, tokenService)),
     getUserProfileController: new GetUserProfileController(new GetUserProfile(userRepository)),
-  });
+  }, authenticate);
 
   app.use('/api', usersRouter);
 

@@ -168,9 +168,12 @@ export const openapiDocument = {
       get: {
         summary: 'Consultar el perfil de un usuario por id',
         tags: ['Users'],
+        security: [{ bearerAuth: [] }],
         parameters: [{ name: 'userId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
         responses: {
           200: { description: 'Usuario encontrado', content: { 'application/json': { schema: { $ref: '#/components/schemas/User' } } } },
+          401: { description: 'Token ausente, inválido o vencido' },
+          403: { description: 'Solo puedes consultar tu propio perfil' },
           404: { description: 'Usuario no encontrado' },
         },
       },
@@ -241,6 +244,9 @@ export const openapiDocument = {
   },
 
   components: {
+    securitySchemes: {
+      bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+    },
     schemas: {
       Team: {
         type: 'object',
