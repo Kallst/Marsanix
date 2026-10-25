@@ -7,8 +7,15 @@ export class CreateGameTemplateController {
 
   handle = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { name, teamSize } = req.body;
-      const gameTemplate = await this.createGameTemplate.execute({ name, teamSize });
+      const { name, teamSize, maxMembers, allowedSeriesLengths, supportedPlatforms, resultProvider } = req.body;
+      const gameTemplate = await this.createGameTemplate.execute({
+        name,
+        teamSize,
+        maxMembers,
+        allowedSeriesLengths,
+        supportedPlatforms,
+        resultProvider,
+      });
       res.status(201).json(gameTemplate);
     } catch (error) {
       if (error instanceof GameTemplateAlreadyExistsError) {

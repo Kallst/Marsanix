@@ -258,25 +258,17 @@ export const openapiDocument = {
 
     '/api/games': {
       post: {
-        summary: 'Crear una plantilla de videojuego',
+        summary: 'Crear una plantilla de videojuego con sus reglas',
         tags: ['Games'],
+        security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
-          content: {
-            'application/json': {
-              schema: {
-                type: 'object',
-                required: ['name', 'teamSize'],
-                properties: {
-                  name: { type: 'string', example: 'League of Legends' },
-                  teamSize: { type: 'integer', example: 5 },
-                },
-              },
-            },
-          },
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/GameTemplateInput' } } },
         },
         responses: {
           201: { description: 'Plantilla creada', content: { 'application/json': { schema: { $ref: '#/components/schemas/GameTemplate' } } } },
+          400: { description: 'Reglas inválidas' },
+          401: { description: 'Token ausente, inválido o vencido' },
           409: { description: 'Ya existe una plantilla con ese nombre' },
         },
       },
@@ -300,6 +292,23 @@ export const openapiDocument = {
         responses: {
           200: { description: 'Plantilla encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/GameTemplate' } } } },
           404: { description: 'Plantilla no encontrada' },
+        },
+      },
+      put: {
+        summary: 'Editar el nombre y las reglas de una plantilla de videojuego',
+        tags: ['Games'],
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/GameTemplateInput' } } },
+        },
+        responses: {
+          200: { description: 'Plantilla actualizada', content: { 'application/json': { schema: { $ref: '#/components/schemas/GameTemplate' } } } },
+          400: { description: 'Reglas inválidas' },
+          401: { description: 'Token ausente, inválido o vencido' },
+          404: { description: 'Plantilla no encontrada' },
+          409: { description: 'Ya existe otra plantilla con ese nombre' },
         },
       },
     },
@@ -336,12 +345,33 @@ export const openapiDocument = {
         },
       },
 
+      GameTemplateInput: {
+        type: 'object',
+        required: ['name', 'teamSize', 'maxMembers', 'allowedSeriesLengths', 'supportedPlatforms', 'resultProvider'],
+        properties: {
+          name: { type: 'string', minLength: 2, maxLength: 50, example: 'Rocket League' },
+          teamSize: { type: 'integer', minimum: 1, description: 'Jugadores en cancha por equipo', example: 3 },
+          maxMembers: { type: 'integer', description: 'Máximo de integrantes de la plantilla, incluidos suplentes (>= teamSize, máx. 20)', example: 4 },
+          allowedSeriesLengths: { type: 'array', items: { type: 'integer' }, description: 'Formatos de serie permitidos (mejor de N, N impar)', example: [1, 3, 5, 7] },
+          supportedPlatforms: {
+            type: 'array',
+            items: { type: 'string', enum: ['steam', 'epic', 'xbox', 'playstation', 'switch'] },
+            example: ['steam', 'epic', 'xbox', 'playstation', 'switch'],
+          },
+          resultProvider: { type: 'string', description: 'Identificador de la fuente de resultados del videojuego', example: 'ballchasing' },
+        },
+      },
+
       GameTemplate: {
         type: 'object',
         properties: {
           id: { type: 'string', format: 'uuid' },
           name: { type: 'string' },
           teamSize: { type: 'integer' },
+          maxMembers: { type: 'integer' },
+          allowedSeriesLengths: { type: 'array', items: { type: 'integer' } },
+          supportedPlatforms: { type: 'array', items: { type: 'string' } },
+          resultProvider: { type: 'string' },
         },
       },
     },
