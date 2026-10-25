@@ -8,21 +8,20 @@ export class PostgresTeamRepository implements TeamRepository {
 
   async findById(id: string): Promise<Team | null> {
     const teamResult = await this.pool.query(
-      'SELECT id, name FROM teams WHERE id = $1',
+      'SELECT id, name, captain_id FROM teams WHERE id = $1',
       [id],
     );
     if (teamResult.rowCount === 0) {
       return null;
     }
 
-    const memberIds = await this.getMemberIds(id);
     const row = teamResult.rows[0];
-    return new Team(row.id, new TeamName(row.name), memberIds);
+    return this.toDomain(row, await this.getMemberIds(id));
   }
 
   async findByUserId(userId: string): Promise<Team[]> {
     const result = await this.pool.query(
-      `SELECT t.id, t.name
+      `SELECT t.id, t.name, t.captain_id
        FROM teams t
        JOIN team_members tm ON tm.team_id = t.id
        WHERE tm.user_id = $1`,
@@ -31,8 +30,7 @@ export class PostgresTeamRepository implements TeamRepository {
 
     const teams: Team[] = [];
     for (const row of result.rows) {
-      const memberIds = await this.getMemberIds(row.id);
-      teams.push(new Team(row.id, new TeamName(row.name), memberIds));
+      teams.push(this.toDomain(row, await this.getMemberIds(row.id)));
     }
     return teams;
   }
@@ -51,9 +49,9 @@ export class PostgresTeamRepository implements TeamRepository {
       await client.query('BEGIN');
 
       await client.query(
-        `INSERT INTO teams (id, name) VALUES ($1, $2)
-         ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name`,
-        [team.id, team.name.toString()],
+        `INSERT INTO teams (id, name, captain_id) VALUES ($1, $2, $3)
+         ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, captain_id = EXCLUDED.captain_id`,
+        [team.id, team.name.toString(), team.captainId],
       );
 
       await client.query('DELETE FROM team_members WHERE team_id = $1', [team.id]);
@@ -72,6 +70,10 @@ export class PostgresTeamRepository implements TeamRepository {
     } finally {
       client.release();
     }
+  }
+
+  private toDomain(row: { id: string; name: string; captain_id: string }, memberIds: string[]): Team {
+    return new Team(row.id, new TeamName(row.name), memberIds, row.captain_id);
   }
 
   private async getMemberIds(teamId: string): Promise<string[]> {

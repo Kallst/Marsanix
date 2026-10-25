@@ -3,6 +3,7 @@ import { AddTeamMember } from '../../application/use-cases/TeamUseCases';
 import { TeamNotFoundError } from '../../domain/exceptions/TeamNotFoundError';
 import { PlayerAlreadyInTeamError } from '../../domain/exceptions/PlayerAlreadyInTeamError';
 import { TeamMemberLimitExceededError } from '../../domain/exceptions/TeamMemberLimitExceededError';
+import { NotTeamCaptainError } from '../../domain/exceptions/NotTeamCaptainError';
 
 export class AddTeamMemberController {
   constructor(private readonly addTeamMember: AddTeamMember) {}
@@ -17,11 +18,15 @@ export class AddTeamMemberController {
     }
 
     try {
-      const team = await this.addTeamMember.execute(teamId, userId);
+      const team = await this.addTeamMember.execute(teamId, userId, res.locals.userId);
       res.status(200).json(team);
     } catch (error) {
       if (error instanceof TeamNotFoundError) {
         res.status(404).json({ message: error.message });
+        return;
+      }
+      if (error instanceof NotTeamCaptainError) {
+        res.status(403).json({ message: error.message });
         return;
       }
       if (error instanceof PlayerAlreadyInTeamError || error instanceof TeamMemberLimitExceededError) {

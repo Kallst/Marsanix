@@ -4,6 +4,7 @@ import { TeamRepository } from '../../domain/repositories/TeamRepository';
 import { TeamNotFoundError } from '../../domain/exceptions/TeamNotFoundError';
 import { PlayerAlreadyInTeamError } from '../../domain/exceptions/PlayerAlreadyInTeamError';
 import { TeamMemberLimitExceededError } from '../../domain/exceptions/TeamMemberLimitExceededError';
+import { CaptainCannotLeaveTeamError } from '../../domain/exceptions/CaptainCannotLeaveTeamError';
 import { CreateTeamDTO } from '../dtos/CreateTeamDTO';
 
 const MAX_MEMBERS = 5; // ajustar según la plantilla del videojuego (F03) más adelante
@@ -17,7 +18,7 @@ export class CreateTeam {
       throw new PlayerAlreadyInTeamError(data.creatorUserId);
     }
 
-    const team = new Team(crypto.randomUUID(), new TeamName(data.name), [data.creatorUserId]);
+    const team = new Team(crypto.randomUUID(), new TeamName(data.name), [data.creatorUserId], data.creatorUserId);
     await this.teamRepository.save(team);
     return team.toDTO();
   }
@@ -26,11 +27,12 @@ export class CreateTeam {
 export class AddTeamMember {
   constructor(private readonly teamRepository: TeamRepository) {}
 
-  async execute(teamId: string, userId: string): Promise<TeamDTO> {
+  async execute(teamId: string, userId: string, requesterId: string): Promise<TeamDTO> {
     const team = await this.teamRepository.findById(teamId);
     if (!team) {
       throw new TeamNotFoundError(teamId);
     }
+    team.ensureCaptain(requesterId);
 
     const alreadyInTeam = await this.teamRepository.isUserInAnyTeam(userId);
     if (alreadyInTeam) {
@@ -41,7 +43,7 @@ export class AddTeamMember {
       throw new TeamMemberLimitExceededError(teamId, MAX_MEMBERS);
     }
 
-    const updatedTeam = new Team(team.id, team.name, [...team.memberIds, userId]);
+    const updatedTeam = team.withMembers([...team.memberIds, userId]);
     await this.teamRepository.save(updatedTeam);
     return updatedTeam.toDTO();
   }
@@ -50,17 +52,34 @@ export class AddTeamMember {
 export class RemoveTeamMember {
   constructor(private readonly teamRepository: TeamRepository) {}
 
-  async execute(teamId: string, userId: string): Promise<TeamDTO> {
+  async execute(teamId: string, userId: string, requesterId: string): Promise<TeamDTO> {
     const team = await this.teamRepository.findById(teamId);
     if (!team) {
       throw new TeamNotFoundError(teamId);
     }
+    team.ensureCaptain(requesterId);
 
-    const updatedTeam = new Team(
-      team.id,
-      team.name,
-      team.memberIds.filter((id) => id !== userId),
-    );
+    if (userId === team.captainId) {
+      throw new CaptainCannotLeaveTeamError(teamId);
+    }
+
+    const updatedTeam = team.withMembers(team.memberIds.filter((id) => id !== userId));
+    await this.teamRepository.save(updatedTeam);
+    return updatedTeam.toDTO();
+  }
+}
+
+export class TransferTeamCaptain {
+  constructor(private readonly teamRepository: TeamRepository) {}
+
+  async execute(teamId: string, newCaptainId: string, requesterId: string): Promise<TeamDTO> {
+    const team = await this.teamRepository.findById(teamId);
+    if (!team) {
+      throw new TeamNotFoundError(teamId);
+    }
+    team.ensureCaptain(requesterId);
+
+    const updatedTeam = team.withCaptain(newCaptainId);
     await this.teamRepository.save(updatedTeam);
     return updatedTeam.toDTO();
   }

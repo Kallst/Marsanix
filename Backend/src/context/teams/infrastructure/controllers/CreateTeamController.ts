@@ -7,8 +7,8 @@ export class CreateTeamController {
 
   handle = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { name, creatorUserId } = req.body;
-      const team = await this.createTeam.execute({ name, creatorUserId });
+      const { name } = req.body;
+      const team = await this.createTeam.execute({ name, creatorUserId: res.locals.userId });
       res.status(201).json(team);
     } catch (error) {
       if (error instanceof PlayerAlreadyInTeamError) {

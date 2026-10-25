@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { CreateGameTemplate } from '../../application/use-cases/CreateGameTemplate';
+import { CreateGameTemplate } from '../../application/use-cases/GameUseCases';
 import { GameTemplateAlreadyExistsError } from '../../domain/exceptions/GameTemplateAlreadyExistsError';
 
 export class CreateGameTemplateController {
@@ -7,8 +7,15 @@ export class CreateGameTemplateController {
 
   handle = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { name, teamSize } = req.body;
-      const gameTemplate = await this.createGameTemplate.execute({ name, teamSize });
+      const { name, teamSize, maxMembers, allowedSeriesLengths, supportedPlatforms, resultProvider } = req.body;
+      const gameTemplate = await this.createGameTemplate.execute({
+        name,
+        teamSize,
+        maxMembers,
+        allowedSeriesLengths,
+        supportedPlatforms,
+        resultProvider,
+      });
       res.status(201).json(gameTemplate);
     } catch (error) {
       if (error instanceof GameTemplateAlreadyExistsError) {
